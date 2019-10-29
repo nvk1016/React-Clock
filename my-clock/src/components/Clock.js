@@ -1,63 +1,57 @@
 import React from 'react';
+import ms from 'pretty-ms'; 
 
 class Clock extends React.Component {
-    constructor() {
-      super();
-      this.state = { time: {}, seconds: 5 };
-      this.timer = 0;
-      this.startTimer = this.startTimer.bind(this);
-      this.countDown = this.countDown.bind(this);
-    }
-  
-    secondsToTime(secs){
-      let hours = Math.floor(secs / (60 * 60));
-  
-      let divisor_for_minutes = secs % (60 * 60);
-      let minutes = Math.floor(divisor_for_minutes / 60);
-  
-      let divisor_for_seconds = divisor_for_minutes % 60;
-      let seconds = Math.ceil(divisor_for_seconds);
-  
-      let obj = {
-        "h": hours,
-        "m": minutes,
-        "s": seconds
-      };
-      return obj;
-    }
-  
-    componentDidMount() {
-      let timeLeftVar = this.secondsToTime(this.state.seconds);
-      this.setState({ time: timeLeftVar });
-    }
-  
-    startTimer() {
-      if (this.timer == 0 && this.state.seconds > 0) {
-        this.timer = setInterval(this.countDown, 1000);
+    constructor(props){
+        super(props)
+        this.state = {
+          time: 0,
+          isOn: false,
+          start: 0
+        }
+        this.startTimer = this.startTimer.bind(this)
+        this.stopTimer = this.stopTimer.bind(this)
+        this.resetTimer = this.resetTimer.bind(this)
+      }
+      startTimer() {
+        this.setState({
+          isOn: true,
+          time: this.state.time,
+          start: Date.now() - this.state.time
+        })
+        this.timer = setInterval(() => this.setState({
+          time: Date.now() - this.state.start
+        }), 1);
+      }
+      stopTimer() {
+        this.setState({isOn: false})
+        clearInterval(this.timer)
+      }
+      resetTimer() {
+        this.setState({time: 0, isOn: false})
+      }
+      render() {
+        let start = (this.state.time == 0) ?
+          <button onClick={this.startTimer}>start</button> :
+          null
+        let stop = (this.state.time == 0 || !this.state.isOn) ?
+          null :
+          <button onClick={this.stopTimer}>stop</button>
+        let resume = (this.state.time == 0 || this.state.isOn) ?
+          null :
+          <button onClick={this.startTimer}>resume</button>
+        let reset = (this.state.time == 0 || this.state.isOn) ?
+          null :
+          <button onClick={this.resetTimer}>reset</button>
+        return(
+          <div>
+            <h3>timer: {ms(this.state.time)}</h3>
+            {start}
+            {resume}
+            {stop}
+            {reset}
+          </div>
+        )
       }
     }
-  
-    countDown() {
-      // Remove one second, set state so a re-render happens.
-      let seconds = this.state.seconds - 1;
-      this.setState({
-        time: this.secondsToTime(seconds),
-        seconds: seconds,
-      });
-      
-      // Check if we're at zero.
-      if (seconds == 0) { 
-        clearInterval(this.timer);
-      }
-    }
-  
-    render() {
-      return(
-        <div>
-          <button onClick={this.startTimer}>Start</button>
-          m: {this.state.time.m} s: {this.state.time.s}
-        </div>
-      );
-    }
-  }
 export default Clock; 
